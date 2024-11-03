@@ -4,10 +4,11 @@ import "time"
 
 type Stock struct {
 	ID           int       `json:"id"`
-	Date         string    `json:"date"`
-	BuyingPrice  float64   `json:"buying_price"`
-	Amount       int       `json:"amount"`
-	Information  string    `json:"information"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ProductID    int       `json:"product_id"`
+	Quantity     int       `json:"quantity"`
+	BasePrice    float64   `json:"base_price"`
+	SellingPrice float64   `json:"selling_price"`
+	Date         time.Time `json:"date"`
+	Description  string    `json:"description"`
+	Product      Product   `json:"product" gorm:"foreignKey:ProductID"`
 }

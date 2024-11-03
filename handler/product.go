@@ -6,6 +6,7 @@ import (
 	"api-kasirapp/input"
 	"api-kasirapp/service"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -128,5 +129,48 @@ func (h *productHandler) DeleteProduct(c *gin.Context) {
 	}
 
 	response := helper.APIResponse("Success delete product", http.StatusOK, "success", formatter.FormatProduct(deleteProduct))
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *productHandler) ExportProducts(c *gin.Context) {
+	file, err := h.productService.ExportProductsToXLS()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Set headers for file download
+	c.Header("Content-Disposition", `attachment; filename="products.xlsx"`)
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+	// Stream file to response
+	file.Write(c.Writer)
+}
+
+func (h *productHandler) ImportProducts(c *gin.Context) {
+	// Get the uploaded file
+	file, err := c.FormFile("file")
+	if err != nil {
+		response := helper.APIResponse("Import products failed", http.StatusBadRequest, "error", gin.H{"message": "file not found"})
+		c.JSON(http.StatusBadRequest, response)
+	}
+
+	// Save the file to a temporary location
+	filePath := "./temp_" + file.Filename
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		response := helper.APIResponse("Import products failed", http.StatusInternalServerError, "error", gin.H{"message": "failed to save file"})
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+	defer os.Remove(filePath) // Remove the file after processing
+
+	// Call the import service
+	if err := h.productService.ImportProductsFromXLS(filePath); err != nil {
+		response := helper.APIResponse("Import products failed", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := helper.APIResponse("Success import products", http.StatusOK, "success", nil)
 	c.JSON(http.StatusOK, response)
 }

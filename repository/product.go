@@ -79,10 +79,9 @@ func (r *productRepository) FindByName(name string) (models.Product, error) {
 
 func (r *productRepository) FindAll() ([]models.Product, error) {
 	var products []models.Product
-
 	err := r.db.Find(&products).Error
 	if err != nil {
-		return products, err
+		return nil, err
 	}
 	return products, nil
 }

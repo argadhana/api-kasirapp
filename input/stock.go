@@ -1,8 +1,12 @@
 package input
 
-type StockInput struct {
-	Date        string  `json:"date"`
-	BuyingPrice float64 `json:"buying_price"`
-	Amount      int     `json:"amount"`
-	Information string  `json:"information"`
+import "time"
+
+type CreateStockInput struct {
+	ProductID    int       `json:"product_id" binding:"required"`
+	Quantity     int       `json:"quantity" binding:"required"`
+	BasePrice    float64   `json:"base_price" binding:"required"`
+	SellingPrice float64   `json:"selling_price" binding:"required"`
+	Date         time.Time `json:"date" binding:"required"`
+	Description  string    `json:"description"`
 }

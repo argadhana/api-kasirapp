@@ -40,6 +40,7 @@ func main() {
 	customerRepository := repository.NewCustomerRepository(db)
 	supplierRepository := repository.NewSupplierRepository(db)
 	discountRepository := repository.NewDiscountRepository(db)
+	stockRepository := repository.NewStockRepository(db)
 
 	userService := service.NewService(userRepository)
 	categoryService := service.NewCategoryService(categoryRepository)
@@ -47,6 +48,7 @@ func main() {
 	customersService := service.NewCustomerService(customerRepository)
 	supplierService := service.NewSupplierService(supplierRepository)
 	discountService := service.NewDiscountService(discountRepository)
+	stockService := service.NewStockService(stockRepository)
 	authService := auth.NewService()
 
 	userHandler := handler.NewUserHandler(userService, authService)
@@ -55,6 +57,7 @@ func main() {
 	customerHandler := handler.NewCustomerHandler(customersService)
 	supplierHandler := handler.NewSupplierHandler(supplierService)
 	discountHandler := handler.NewDiscountHandler(discountService)
+	stockHandler := handler.NewStockHandler(stockService)
 	router := gin.Default()
 
 	api := router.Group("/api/v1")
@@ -90,6 +93,13 @@ func main() {
 	api.DELETE("/customers/:id", customerHandler.DeleteCustomer)
 	api.DELETE("/suppliers/:id", supplierHandler.DeleteSupplier)
 	api.DELETE("/discounts/:id", discountHandler.DeleteDiscount)
+
+	api.POST("/stocks", stockHandler.AddStock)
+	api.GET("/stocks", stockHandler.GetStocks)
+	api.GET("/stocks/:productID", stockHandler.GetStocksByProductID)
+
+	api.GET("/export/products", productHandler.ExportProducts)
+	api.POST("/import/products", productHandler.ImportProducts)
 
 	router.Run()
 }

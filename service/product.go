@@ -4,6 +4,11 @@ import (
 	"api-kasirapp/input"
 	"api-kasirapp/models"
 	"api-kasirapp/repository"
+	"errors"
+	"fmt"
+	"github.com/xuri/excelize/v2"
+	"strconv"
+	"time"
 )
 
 type ProductService interface {
@@ -13,6 +18,8 @@ type ProductService interface {
 	FindAll() ([]models.Product, error)
 	UpdateProduct(ID int, input input.ProductInput) (models.Product, error)
 	DeleteProduct(ID int) (models.Product, error)
+	ExportProductsToXLS() (*excelize.File, error)
+	ImportProductsFromXLS(filePath string) error
 }
 
 type productService struct {
@@ -113,4 +120,116 @@ func (s *productService) DeleteProduct(ID int) (models.Product, error) {
 	}
 
 	return deletedProduct, nil
+}
+
+func (s *productService) ExportProductsToXLS() (*excelize.File, error) {
+	// Fetch products from the database
+	products, err := s.productRepository.FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("Number of products retrieved: %d\n", len(products))
+
+	if len(products) == 0 {
+		return nil, errors.New("no products found to export")
+	}
+
+	// Create a new Excel file
+	f := excelize.NewFile()
+	sheet := "Products"
+	index, err := f.NewSheet(sheet)
+	if err != nil {
+		return nil, err
+	}
+
+	// Write headers
+	headers := []string{"ID", "Name", "Product Type", "Base Price", "Selling Price", "Stock", "Code Product", "Category ID", "Minimum Stock", "Shelf", "Weight", "Discount", "Information", "Created At", "Updated At"}
+	for i, header := range headers {
+		cell := string(rune('A'+i)) + "1"
+		f.SetCellValue(sheet, cell, header)
+	}
+
+	// Write product data
+	for i, product := range products {
+		row := i + 2
+		fmt.Printf("Writing product %d to row %d\n", product.ID, row) // Debugging output
+
+		f.SetCellValue(sheet, "A"+strconv.Itoa(row), product.ID)
+		f.SetCellValue(sheet, "B"+strconv.Itoa(row), product.Name)
+		f.SetCellValue(sheet, "C"+strconv.Itoa(row), product.ProductType)
+		f.SetCellValue(sheet, "D"+strconv.Itoa(row), product.BasePrice)
+		f.SetCellValue(sheet, "E"+strconv.Itoa(row), product.SellingPrice)
+		f.SetCellValue(sheet, "F"+strconv.Itoa(row), product.Stock)
+		f.SetCellValue(sheet, "G"+strconv.Itoa(row), product.CodeProduct)
+		f.SetCellValue(sheet, "H"+strconv.Itoa(row), product.CategoryID)
+		f.SetCellValue(sheet, "I"+strconv.Itoa(row), product.MinimumStock)
+		f.SetCellValue(sheet, "J"+strconv.Itoa(row), product.Shelf)
+		f.SetCellValue(sheet, "K"+strconv.Itoa(row), product.Weight)
+		f.SetCellValue(sheet, "L"+strconv.Itoa(row), product.Discount)
+		f.SetCellValue(sheet, "M"+strconv.Itoa(row), product.Information)
+		f.SetCellValue(sheet, "N"+strconv.Itoa(row), product.CreatedAt.Format(time.RFC3339))
+		f.SetCellValue(sheet, "O"+strconv.Itoa(row), product.UpdatedAt.Format(time.RFC3339))
+	}
+
+	// Set active sheet and delete the default sheet
+	f.SetActiveSheet(index)
+	f.DeleteSheet("Sheet1")
+
+	return f, nil
+}
+
+func (s *productService) ImportProductsFromXLS(filePath string) error {
+	// Open the Excel file
+	f, err := excelize.OpenFile(filePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	// Read data from the first sheet
+	sheet := "Products"
+	rows, err := f.GetRows(sheet)
+	if err != nil {
+		return err
+	}
+
+	// Skip the header row
+	for i, row := range rows {
+		if i == 0 {
+			continue
+		}
+
+		// Parse each column into product fields
+		basePrice, _ := strconv.ParseFloat(row[3], 64)
+		sellingPrice, _ := strconv.ParseFloat(row[4], 64)
+		stock, _ := strconv.Atoi(row[5])
+		categoryID, _ := strconv.Atoi(row[7])
+		minimumStock, _ := strconv.Atoi(row[8])
+		weight, _ := strconv.Atoi(row[10])
+		discount, _ := strconv.Atoi(row[11])
+
+		product := models.Product{
+			Name:         row[1],
+			ProductType:  row[2],
+			BasePrice:    basePrice,
+			SellingPrice: sellingPrice,
+			Stock:        stock,
+			CodeProduct:  row[6],
+			CategoryID:   categoryID,
+			MinimumStock: minimumStock,
+			Shelf:        row[9],
+			Weight:       weight,
+			Discount:     discount,
+			Information:  row[12],
+		}
+
+		// Insert product into database
+		_, err := s.productRepository.Save(product)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
