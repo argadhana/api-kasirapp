@@ -41,6 +41,7 @@ func main() {
 	supplierRepository := repository.NewSupplierRepository(db)
 	discountRepository := repository.NewDiscountRepository(db)
 	stockRepository := repository.NewStockRepository(db)
+	transactionRepository := repository.NewOrderRepository(db)
 
 	userService := service.NewService(userRepository)
 	categoryService := service.NewCategoryService(categoryRepository)
@@ -49,6 +50,7 @@ func main() {
 	supplierService := service.NewSupplierService(supplierRepository)
 	discountService := service.NewDiscountService(discountRepository)
 	stockService := service.NewStockService(stockRepository)
+	transactionService := service.NewOrderService(transactionRepository)
 	authService := auth.NewService()
 
 	userHandler := handler.NewUserHandler(userService, authService)
@@ -58,6 +60,7 @@ func main() {
 	supplierHandler := handler.NewSupplierHandler(supplierService)
 	discountHandler := handler.NewDiscountHandler(discountService)
 	stockHandler := handler.NewStockHandler(stockService)
+	transactionHandler := handler.NewTransactionHandler(transactionService)
 	router := gin.Default()
 
 	api := router.Group("/api/v1")
@@ -69,6 +72,7 @@ func main() {
 	api.POST("/customers", customerHandler.CreateCustomer)
 	api.POST("/suppliers", supplierHandler.CreateSupplier)
 	api.POST("/discounts", discountHandler.CreateDiscount)
+	api.POST("/transactions", transactionHandler.CreateTransaction)
 
 	api.GET("/categories", categoryHandler.GetCategories)
 	api.GET("/categories/:id", categoryHandler.GetCategoryById)
@@ -81,6 +85,7 @@ func main() {
 	api.GET("/discounts", discountHandler.GetDiscounts)
 	api.GET("/discounts/:id", discountHandler.GetDiscountById)
 	api.GET("/category-products/:id", categoryHandler.GetCategoryProducts)
+	api.GET("/transactions/:id", transactionHandler.GetTransaction)
 
 	api.PUT("/categories/:id", categoryHandler.UpdateCategory)
 	api.PUT("/products/:id", productHandler.UpdateProduct)
