@@ -10,6 +10,7 @@ type OrderRepository interface {
 	Create(data *models.Transaction) (*models.Transaction, error)
 	GetByID(ID int) (*models.Transaction, error)
 	GetTransactionWithProducts(ID int) ([]models.Product, error)
+	GetTotalSalesByShiftID(ID int) (float64, error)
 }
 
 type orderRepository struct {
@@ -58,4 +59,14 @@ func (r *orderRepository) GetTransactionWithProducts(ID int) ([]models.Product, 
 	}
 
 	return data, nil
+}
+
+func (r *orderRepository) GetTotalSalesByShiftID(ID int) (float64, error) {
+	var total float64
+
+	if err := r.db.Debug().Model(&models.Transaction{}).Where("shift_id = ?", ID).Select("COALESCE(SUM(total), 0)").Scan(&total).Error; err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }
