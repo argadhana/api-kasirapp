@@ -8,6 +8,7 @@ type Product struct {
 	ID           int
 	Name         string
 	ProductType  string
+	ProductFileName	 string
 	BasePrice    float64
 	SellingPrice float64
 	Stock        int

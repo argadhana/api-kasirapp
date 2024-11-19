@@ -6,6 +6,7 @@ type ProductFormatter struct {
 	ID           int     `json:"id"`
 	Name         string  `json:"name"`
 	ProductType  string  `json:"product_type"`
+	ImageURL     string  `json:"image_url"`
 	BasePrice    float64 `json:"base_price"`
 	SellingPrice float64 `json:"selling_price"`
 	Stock        int     `json:"stock"`
@@ -21,10 +22,11 @@ type ProductFormatter struct {
 }
 
 func FormatProduct(product models.Product) ProductFormatter {
-	formatter := ProductFormatter{
+	return ProductFormatter{
 		ID:           product.ID,
 		Name:         product.Name,
 		ProductType:  product.ProductType,
+		ImageURL:     product.ProductFileName, // Correctly include the image URL
 		BasePrice:    product.BasePrice,
 		SellingPrice: product.SellingPrice,
 		Stock:        product.Stock,
@@ -38,7 +40,6 @@ func FormatProduct(product models.Product) ProductFormatter {
 		CreatedAt:    product.CreatedAt.Format("2006-01-02 15:04:05"),
 		UpdatedAt:    product.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
-	return formatter
 }
 
 func FormatProducts(products []models.Product) []ProductFormatter {

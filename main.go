@@ -73,6 +73,7 @@ func main() {
 	api.POST("/suppliers", supplierHandler.CreateSupplier)
 	api.POST("/discounts", discountHandler.CreateDiscount)
 	api.POST("/transactions", transactionHandler.CreateTransaction)
+	api.POST("/product-image/:id", productHandler.UploadProductImage)
 
 	api.GET("/categories", categoryHandler.GetCategories)
 	api.GET("/categories/:id", categoryHandler.GetCategoryById)
@@ -85,7 +86,6 @@ func main() {
 	api.GET("/discounts", discountHandler.GetDiscounts)
 	api.GET("/discounts/:id", discountHandler.GetDiscountById)
 	api.GET("/category-products/:id", categoryHandler.GetCategoryProducts)
-	api.GET("/transactions/:id", transactionHandler.GetTransaction)
 
 	api.PUT("/categories/:id", categoryHandler.UpdateCategory)
 	api.PUT("/products/:id", productHandler.UpdateProduct)

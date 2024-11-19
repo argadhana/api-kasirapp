@@ -20,6 +20,7 @@ type ProductService interface {
 	DeleteProduct(ID int) (models.Product, error)
 	ExportProductsToXLS() (*excelize.File, error)
 	ImportProductsFromXLS(filePath string) error
+	SaveProductImage(ID int, fileLocation string) (models.Product, error)
 }
 
 type productService struct {
@@ -100,7 +101,7 @@ func (s *productService) UpdateProduct(ID int, input input.ProductInput) (models
 	product.Discount = input.Discount
 	product.Information = input.Information
 
-	updatedProduct, err := s.productRepository.Update(ID, product)
+	updatedProduct, err := s.productRepository.Update(product)
 	if err != nil {
 		return updatedProduct, err
 	}
@@ -232,4 +233,23 @@ func (s *productService) ImportProductsFromXLS(filePath string) error {
 	}
 
 	return nil
+}
+
+func (s *productService) SaveProductImage(productID int, filePath string) (models.Product, error) {
+	// Find the product by ID
+	product, err := s.productRepository.FindByID(productID)
+	if err != nil {
+		return product, fmt.Errorf("product not found: %w", err)
+	}
+
+	// Update the product's image URL
+	product.ProductFileName = filePath
+
+	// Save the updated product in the database
+	updatedProduct, err := s.productRepository.Update(product)
+	if err != nil {
+		return updatedProduct, fmt.Errorf("failed to update product: %w", err)
+	}
+
+	return updatedProduct, nil
 }

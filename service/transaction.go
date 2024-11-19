@@ -5,17 +5,14 @@ import (
 	"api-kasirapp/models"
 	"api-kasirapp/repository"
 	"errors"
+	"strconv"
 
 	"gorm.io/gorm"
 )
 
 type OrderServices interface {
-	CreateTransaction(input input.TransactionInput) (*models.Transaction, error)
-	GetTransactions(ID int) (*models.Transaction, error)
-	GetTransactionWithProducts(ID int) (*[]models.Product, error)
-	// HandleSentEmail(data []byte) error
-	// HandleLogging(data []byte) error
-	// HandleCallback(notificationPayload map[string]interface{}) error
+	CreateTransactionWithCash(input input.TransactionInput) (models.Transaction, float64, error)
+	GetTransactions(ID int) (models.Transaction, error)
 }
 
 type orderService struct {
@@ -27,37 +24,65 @@ func NewOrderService(orderRepository repository.OrderRepository, productReposito
 	return &orderService{orderRepository, productRepository}
 }
 
-func (s *orderService) CreateTransaction(input input.TransactionInput) (*models.Transaction, error) {
-	trx := &models.Transaction{}
+func (s *orderService) CreateTransactionWithCash(input input.TransactionInput) (models.Transaction, float64, error) {
+	trx := models.Transaction{}
+	var details []models.TransactionDetail
+	totalCost := 0.0
 
-	trx.ProductID = input.ProductID
-	trx.Qty = input.Qty
-	trx.Amount = input.Amount
+	for _, productInput := range input.Products {
+		product, err := s.productRepository.FindByID(productInput.ProductID)
+		if err != nil {
+			return trx, 0, err
+		}
 
-	product, err := s.productRepository.FindByID(input.ProductID)
-	if err != nil {
-		return nil, err
+		if product.Stock < productInput.Qty {
+			return trx, 0, errors.New("stock not enough for product ID " + strconv.Itoa(productInput.ProductID))
+		}
+
+		// Calculate cost for this product
+		productCost := product.SellingPrice * float64(productInput.Qty)
+		totalCost += productCost
+
+		// Deduct stock
+		product.Stock -= productInput.Qty
+		_, err = s.productRepository.Update(product)
+		if err != nil {
+			return trx, 0, err
+		}
+
+		// Add to transaction details
+		details = append(details, models.TransactionDetail{
+			ProductID: productInput.ProductID,
+			Qty:       productInput.Qty,
+		})
 	}
 
-	if product.Stock < input.Qty {
-		return nil, errors.New("stock not enough")
-	}
-
-	totalCost := product.SellingPrice * float64(input.Qty)
+	// Check if balance is sufficient
 	if float64(input.Balance) < totalCost {
-		return nil, errors.New("balance not enough")
+		return trx, 0, errors.New("balance not enough")
 	}
+	cashReturn := float64(input.Balance) - totalCost
 
-	data, err := s.orderRepository.Create(trx)
+	// Save transaction and details
+	trx.Amount = totalCost
+	trx.Qty = len(input.Products)
+
+	savedTransaction, err := s.orderRepository.Create(trx, details)
 	if err != nil {
-		return nil, err
+		return savedTransaction, 0, err
 	}
 
-	return data, nil
+	// Fetch transaction with details
+	err = s.orderRepository.GetByIDWithDetails(savedTransaction.ID, &savedTransaction)
+	if err != nil {
+		return savedTransaction, 0, err
+	}
+
+	return savedTransaction, cashReturn, nil
 
 }
 
-func (s *orderService) GetTransactions(ID int) (*models.Transaction, error) {
+func (s *orderService) GetTransactions(ID int) (models.Transaction, error) {
 	data, err := s.orderRepository.GetByID(ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -67,13 +92,4 @@ func (s *orderService) GetTransactions(ID int) (*models.Transaction, error) {
 	}
 
 	return data, nil
-}
-
-func (s *orderService) GetTransactionWithProducts(ID int) (*[]models.Product, error) {
-	products, err := s.orderRepository.GetTransactionWithProducts(ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &products, nil
 }

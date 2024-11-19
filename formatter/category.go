@@ -40,12 +40,6 @@ func FormatCategories(categories []models.Category) []CategoryFormatter {
 	return categoriesFormatter
 }
 
-func FormatProductWithCategory(product models.Product) ProductFormatter {
-	return ProductFormatter{
-		Name: product.Name,
-	}
-}
-
 func FormatCategoryProducts(category models.Category, products []models.Product) CategoryProductFormatter {
 	var productList []ProductFormatter
 	for _, product := range products {

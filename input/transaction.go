@@ -1,8 +1,11 @@
 package input
 
+type TransactionProductInput struct {
+	ProductID int `json:"product_id"`
+	Qty       int `json:"quantity"`
+}
+
 type TransactionInput struct {
-	ProductID int     `json:"product_id"`
-	Qty       int     `json:"qty"`
-	Amount    float32 `json:"amount"`
-	Balance   float32 `json:"balance"`
+	Products []TransactionProductInput `json:"products"`
+	Balance  float32                   `json:"balance"`
 }

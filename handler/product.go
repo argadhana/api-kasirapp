@@ -5,6 +5,7 @@ import (
 	"api-kasirapp/helper"
 	"api-kasirapp/input"
 	"api-kasirapp/service"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -172,5 +173,51 @@ func (h *productHandler) ImportProducts(c *gin.Context) {
 	}
 
 	response := helper.APIResponse("Success import products", http.StatusOK, "success", nil)
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *productHandler) UploadProductImage(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		response := helper.APIResponse("Invalid ID format", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Get the uploaded file
+	file, err := c.FormFile("image")
+	if err != nil {
+		response := helper.APIResponse("Upload image failed", http.StatusBadRequest, "error", gin.H{"message": "file not found"})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Ensure the directory exists
+	if _, err := os.Stat("./images-product"); os.IsNotExist(err) {
+		if err := os.Mkdir("./images-product", os.ModePerm); err != nil {
+			response := helper.APIResponse("Failed to create image directory", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
+			c.JSON(http.StatusInternalServerError, response)
+			return
+		}
+	}
+
+	// Save the file to the directory
+	filePath := fmt.Sprintf("./images-product/%s", file.Filename)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		response := helper.APIResponse("Upload image failed", http.StatusInternalServerError, "error", gin.H{"message": "failed to save file"})
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Call the service to update the product with the image URL
+	updatedProduct, err := h.productService.SaveProductImage(id, filePath)
+	if err != nil {
+		response := helper.APIResponse("Upload image failed", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := helper.APIResponse("Success upload image", http.StatusOK, "success", formatter.FormatProduct(updatedProduct))
 	c.JSON(http.StatusOK, response)
 }

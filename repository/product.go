@@ -13,7 +13,7 @@ type ProductRepository interface {
 	FindByName(name string) (models.Product, error)
 	FindAll() ([]models.Product, error)
 	FindByCategoryID(categoryID int) ([]models.Product, error)
-	Update(ID int, product models.Product) (models.Product, error)
+	Update(product models.Product) (models.Product, error)
 	Delete(ID int) (models.Product, error)
 }
 
@@ -49,17 +49,10 @@ func (r *productRepository) Save(product models.Product) (models.Product, error)
 
 	return product, nil
 }
-
-func (r *productRepository) FindByID(ID int) (models.Product, error) {
+func (r *productRepository) FindByID(productID int) (models.Product, error) {
 	var product models.Product
-
-	err := r.db.Where("id = ?", ID).Find(&product).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return product, errors.New("product not found")
-		}
+	if err := r.db.First(&product, productID).Error; err != nil {
 		return product, err
-
 	}
 	return product, nil
 }
@@ -85,10 +78,8 @@ func (r *productRepository) FindAll() ([]models.Product, error) {
 	}
 	return products, nil
 }
-
-func (r *productRepository) Update(ID int, product models.Product) (models.Product, error) {
-	err := r.db.Save(&product).Error
-	if err != nil {
+func (r *productRepository) Update(product models.Product) (models.Product, error) {
+	if err := r.db.Save(&product).Error; err != nil {
 		return product, err
 	}
 	return product, nil
