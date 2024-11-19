@@ -2,12 +2,14 @@ package repository
 
 import (
 	"api-kasirapp/models"
+
 	"gorm.io/gorm"
 )
 
 type OrderRepository interface {
 	Create(data *models.Transaction) (*models.Transaction, error)
 	GetByID(ID int) (*models.Transaction, error)
+	GetTransactionWithProducts(ID int) ([]models.Product, error)
 }
 
 type orderRepository struct {
@@ -18,7 +20,7 @@ func NewOrderRepository(db *gorm.DB) *orderRepository {
 	return &orderRepository{db}
 }
 
-func (r *orderRepository) Create(data *models.Transaction) (*models.Transaction, error){
+func (r *orderRepository) Create(data *models.Transaction) (*models.Transaction, error) {
 	tx := r.db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -46,4 +48,14 @@ func (r *orderRepository) GetByID(ID int) (*models.Transaction, error) {
 	}
 
 	return &data, nil
+}
+
+func (r *orderRepository) GetTransactionWithProducts(ID int) ([]models.Product, error) {
+	var data []models.Product
+
+	if err := r.db.Debug().Preload("Product").Find(&data).Error; err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }

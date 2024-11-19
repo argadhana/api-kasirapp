@@ -5,9 +5,10 @@ import (
 	"api-kasirapp/helper"
 	"api-kasirapp/input"
 	"api-kasirapp/service"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type transactionHandler struct {
@@ -54,7 +55,7 @@ func (h *transactionHandler) GetTransaction(c *gin.Context) {
 		return
 	}
 
-	transaction, err := h.transactionService.GetTransaction(id)
+	transaction, err := h.transactionService.GetTransactions(id)
 	if err != nil {
 		response := helper.APIResponse("Get transaction failed", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
