@@ -27,6 +27,10 @@ func main() {
 	password := os.Getenv("DB_PASSWORD")
 	databaseName := os.Getenv("DB_NAME")
 	port := os.Getenv("DB_PORT")
+	secretKey := os.Getenv("SECRET_KEY")
+
+	// Initialize the auth service
+	authService := auth.NewService(secretKey)
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Africa/Lagos", host, username, password, databaseName, port)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -51,7 +55,6 @@ func main() {
 	discountService := service.NewDiscountService(discountRepository)
 	stockService := service.NewStockService(stockRepository)
 	transactionService := service.NewOrderService(transactionRepository, productRepository)
-	authService := auth.NewService()
 
 	userHandler := handler.NewUserHandler(userService, authService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
