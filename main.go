@@ -7,6 +7,7 @@ import (
 	"api-kasirapp/repository"
 	"api-kasirapp/service"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"log"
 	"net/http"
 	"os"
@@ -65,6 +66,14 @@ func main() {
 	stockHandler := handler.NewStockHandler(stockService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // Allow all origins
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	api := router.Group("/api/v1")
 	api.POST("/users", userHandler.RegisterUser)
