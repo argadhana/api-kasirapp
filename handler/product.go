@@ -193,9 +193,12 @@ func (h *productHandler) UploadProductImage(c *gin.Context) {
 		return
 	}
 
+	// Define the target directory
+	imageDir := "/var/www/images-product"
+
 	// Ensure the directory exists
-	if _, err := os.Stat("./images-product"); os.IsNotExist(err) {
-		if err := os.Mkdir("./images-product", os.ModePerm); err != nil {
+	if _, err := os.Stat(imageDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(imageDir, os.ModePerm); err != nil {
 			response := helper.APIResponse("Failed to create image directory", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
 			c.JSON(http.StatusInternalServerError, response)
 			return
@@ -203,7 +206,7 @@ func (h *productHandler) UploadProductImage(c *gin.Context) {
 	}
 
 	// Save the file to the directory
-	filePath := fmt.Sprintf("./images-product/%s", file.Filename)
+	filePath := fmt.Sprintf("%s/%s", imageDir, file.Filename)
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		response := helper.APIResponse("Upload image failed", http.StatusInternalServerError, "error", gin.H{"message": "failed to save file"})
 		c.JSON(http.StatusInternalServerError, response)
