@@ -30,7 +30,6 @@ func NewService(repository repository2.UserRepository) *userService {
 func (s *userService) RegisterUser(input input.RegisterUserInput) (models.User, error) {
 	user := models.User{}
 
-	user.Name = input.Name
 	user.Email = input.Email
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
 	if err != nil {
