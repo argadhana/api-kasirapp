@@ -16,6 +16,8 @@ type CategoryService interface {
 	UpdateCategory(ID int, input input.CategoryInput) (models.Category, error)
 	DeleteCategory(ID int) (models.Category, error)
 	GetCategoryProducts(ID int) ([]models.Product, error)
+	GetProductsWithCategoryName(categoryName string) ([]models.Product, error)
+	GetCategoryByName(name string) (models.Category, error)
 }
 
 type categoryService struct {
@@ -34,6 +36,16 @@ func (s *categoryService)GetCategoryProducts(ID int) ([]models.Product, error){
 
 	return products, nil
 }
+
+func (s *categoryService)GetProductsWithCategoryName(categoryName string) ([]models.Product, error){
+	products, err := s.repository.FindProductsWithCategoryName(categoryName)
+	if err != nil {
+		return products, err
+	}
+
+	return products, nil
+}
+
 func (s *categoryService) SaveCategory(input input.CategoryInput) (models.Category, error) {
 	category := models.Category{}
 
@@ -68,6 +80,16 @@ func (s *categoryService) FindCategories() ([]models.Category, error) {
 	}
 
 	return categories, nil
+}
+
+func (s *categoryService) GetCategoryByName(name string) (models.Category, error) {
+	category, err := s.repository.FindCategoryByName(name)
+	if err != nil {
+		return category, err
+	}
+
+	return category, nil
+
 }
 
 func (s *categoryService) UpdateCategory(ID int, input input.CategoryInput) (models.Category, error) {

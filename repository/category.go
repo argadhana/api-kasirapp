@@ -13,6 +13,7 @@ type CategoryRepository interface {
 	UpdateCategory(category models.Category) (models.Category, error)
 	DeleteCategory(ID int) (models.Category, error)
 	FindCategoryProducts(ID int) ([]models.Product, error)
+	FindProductsWithCategoryName(categoryName string) ([]models.Product, error)
 }
 
 type categoryRepository struct {
@@ -88,6 +89,16 @@ func (r *categoryRepository) DeleteCategory(ID int) (models.Category, error) {
 	var category models.Category
 
 	err := r.db.Where("id = ?", ID).Delete(&category).Error
+	if err != nil {
+		return category, err
+	}
+	return category, nil
+}
+
+func (r *categoryRepository) FindProductsWithCategoryName(categoryName string) ([]models.Product, error) {
+	var category []models.Product
+
+	err := r.db.Preload("Product").Where("name = ?", categoryName).First(&category).Error
 	if err != nil {
 		return category, err
 	}

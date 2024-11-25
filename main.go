@@ -98,7 +98,7 @@ func main() {
 	api.GET("/discounts", discountHandler.GetDiscounts)
 	api.GET("/discounts/:id", discountHandler.GetDiscountById)
 	api.GET("/category-products/:id", categoryHandler.GetCategoryProducts)
-	api.GET("/category-name", productHandler.GetCategoryName)
+	api.GET("/category-name/:category_name", categoryHandler.GetProductsByCategoryName)
 
 	api.PUT("/categories/:id", categoryHandler.UpdateCategory)
 	api.PUT("/products/:id", productHandler.UpdateProduct)

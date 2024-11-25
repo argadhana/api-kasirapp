@@ -13,6 +13,7 @@ type CustomerRepository interface {
 	FindCustomerByID(ID int) (models.Customer, error)
 	UpdateCustomer(customer models.Customer) (models.Customer, error)
 	DeleteCustomer(ID int) (models.Customer, error)
+	CountCustomers() (int64, error)
 }
 
 type customerRepository struct {
@@ -78,3 +79,13 @@ func (r *customerRepository) DeleteCustomer(ID int) (models.Customer, error) {
 
 	return customer, nil
 }
+
+func (r *customerRepository) CountCustomers() (int64, error) {
+	var count int64
+	err := r.db.Model(&models.Customer{}).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+

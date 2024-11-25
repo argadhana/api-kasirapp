@@ -62,26 +62,6 @@ func (h *productHandler) GetProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func (h *productHandler) GetCategoryName(c *gin.Context) {
-	var input input.CategoryInput
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		response := helper.APIResponse("Invalid request body", http.StatusBadRequest, "error", err.Error())
-		c.JSON(http.StatusBadRequest, response)
-		return
-	}
-
-	category, err := h.productService.FindCategoryName(input)
-	if err != nil {
-		response := helper.APIResponse("Get category name failed", http.StatusBadRequest, "error", err.Error())
-		c.JSON(http.StatusBadRequest, response)
-		return
-	}
-
-	response := helper.APIResponse("Success get category name", http.StatusOK, "success", formatter.FormatCategory(category))
-	c.JSON(http.StatusOK, response)
-}
-
 func (h *productHandler) GetProductById(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -198,7 +178,6 @@ func (h *productHandler) ImportProducts(c *gin.Context) {
 	response := helper.APIResponse("Success import products", http.StatusOK, "success", gin.H{"products": importedProducts})
 	c.JSON(http.StatusOK, response)
 }
-
 func (h *productHandler) UploadProductImage(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -216,9 +195,12 @@ func (h *productHandler) UploadProductImage(c *gin.Context) {
 		return
 	}
 
+	// Define the target directory
+	imageDir := "/var/www/images-product"
+
 	// Ensure the directory exists
-	if _, err := os.Stat("./images-product"); os.IsNotExist(err) {
-		if err := os.Mkdir("./images-product", os.ModePerm); err != nil {
+	if _, err := os.Stat(imageDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(imageDir, os.ModePerm); err != nil {
 			response := helper.APIResponse("Failed to create image directory", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
 			c.JSON(http.StatusInternalServerError, response)
 			return
@@ -226,21 +208,28 @@ func (h *productHandler) UploadProductImage(c *gin.Context) {
 	}
 
 	// Save the file to the directory
-	filePath := fmt.Sprintf("./images-product/%s", file.Filename)
+	filePath := fmt.Sprintf("%s/%s", imageDir, file.Filename)
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		response := helper.APIResponse("Upload image failed", http.StatusInternalServerError, "error", gin.H{"message": "failed to save file"})
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
+	// Generate the public image URL
+	publicURL := fmt.Sprintf("/images/%s", file.Filename)
+
 	// Call the service to update the product with the image URL
-	updatedProduct, err := h.productService.SaveProductImage(id, filePath)
+	updatedProduct, err := h.productService.SaveProductImage(id, publicURL)
 	if err != nil {
 		response := helper.APIResponse("Upload image failed", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	response := helper.APIResponse("Success upload image", http.StatusOK, "success", formatter.FormatProduct(updatedProduct))
+	// Respond with the public image URL
+	response := helper.APIResponse("Success upload image", http.StatusOK, "success", gin.H{
+		"image_url": publicURL,
+		"product":   formatter.FormatProduct(updatedProduct),
+	})
 	c.JSON(http.StatusOK, response)
 }

@@ -16,6 +16,7 @@ type CustomerService interface {
 	GetCustomerByID(ID int) (models.Customer, error)
 	UpdateCustomer(ID int, input input.CustomerInput) (models.Customer, error)
 	DeleteCustomer(ID int) (models.Customer, error)
+	CountCustomers() (int64, error)
 }
 
 type customerService struct {
@@ -107,3 +108,8 @@ func (s *customerService) DeleteCustomer(ID int) (models.Customer, error) {
 
 	return deletedCustomer, nil
 }
+
+func (s *customerService) CountCustomers() (int64, error) {
+	return s.repository.CountCustomers()
+}
+

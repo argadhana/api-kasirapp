@@ -161,3 +161,34 @@ func (h *categoryHandler) GetCategoryProducts(c *gin.Context) {
 	response := helper.APIResponse("Success get category products", http.StatusOK, "success", formatedProducts)
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *categoryHandler) GetProductsByCategoryName(c *gin.Context) {
+	// Ambil parameter kategori dari request
+	categoryName := c.Param("category_name")
+	if categoryName == "" {
+		response := helper.APIResponse("Category name is required", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	products, err := h.categoryService.GetProductsWithCategoryName(categoryName)
+	if err != nil {
+		response := helper.APIResponse("Get category products failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Panggil service
+	category, err := h.categoryService.GetCategoryByName(categoryName)
+	if err != nil {
+		response := helper.APIResponse("Failed to get products by category", http.StatusBadRequest, "error", err.Error())
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formattedCategory := formatter.FormatCategoryProducts(category, products)
+
+	// Format dan kembalikan response
+	response := helper.APIResponse("Success get products by category", http.StatusOK, "success", formattedCategory)
+	c.JSON(http.StatusOK, response)
+}

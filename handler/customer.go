@@ -5,6 +5,7 @@ import (
 	"api-kasirapp/helper"
 	"api-kasirapp/input"
 	"api-kasirapp/service"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -62,7 +63,28 @@ func (h *customerHandler) GetCustomers(c *gin.Context) {
 		return
 	}
 
-	response := helper.APIResponse("Success get customers", http.StatusOK, "success", customers)
+	totalCount, err := h.customerService.CountCustomers()
+	if err != nil {
+		response := helper.APIResponse("Get customers failed", http.StatusBadRequest, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	totalPages := int(math.Ceil(float64(totalCount) / float64(limit)))
+
+	formattedCustomers := formatter.FormatCustomers(customers)
+
+	paginationMeta := gin.H{
+		"total_data":   totalCount,
+		"total_pages":  totalPages,
+		"current_page": offset/limit + 1,
+		"per_page":     limit,
+	}
+
+	response := helper.APIResponse("Success get customers", http.StatusOK, "success", gin.H{
+		"data":       formattedCustomers,
+		"pagination": paginationMeta,
+	})
 	c.JSON(http.StatusOK, response)
 }
 
