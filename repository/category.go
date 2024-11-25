@@ -87,7 +87,7 @@ func (r *categoryRepository) UpdateCategory(category models.Category) (models.Ca
 func (r *categoryRepository) DeleteCategory(ID int) (models.Category, error) {
 	var category models.Category
 
-	err := r.db.Where("id = ?", ID).First(&category).Error
+	err := r.db.Where("id = ?", ID).Delete(&category).Error
 	if err != nil {
 		return category, err
 	}

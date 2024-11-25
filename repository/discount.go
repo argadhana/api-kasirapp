@@ -65,7 +65,7 @@ func (r *discountRepository) UpdateDiscount(ID int, input models.Discount) (mode
 func (r *discountRepository) DeleteDiscount(ID int) (models.Discount, error) {
 	var discount models.Discount
 
-	err := r.db.Where("id = ?", ID).First(&discount).Error
+	err := r.db.Where("id = ?", ID).Delete(&discount).Error
 	if err != nil {
 		return discount, err
 	}

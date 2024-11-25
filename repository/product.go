@@ -90,7 +90,7 @@ func (r *productRepository) Update(product models.Product) (models.Product, erro
 func (r *productRepository) Delete(ID int) (models.Product, error) {
 	var product models.Product
 
-	err := r.db.Where("id = ?", ID).First(&product).Error
+	err := r.db.Where("id = ?", ID).Delete(&product).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return product, errors.New("product not found")

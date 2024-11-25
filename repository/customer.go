@@ -68,7 +68,7 @@ func (r *customerRepository) UpdateCustomer(customer models.Customer) (models.Cu
 func (r *customerRepository) DeleteCustomer(ID int) (models.Customer, error) {
 	var customer models.Customer
 
-	err := r.db.Where("id = ?", ID).First(&customer).Error
+	err := r.db.Where("id = ?", ID).Delete(&customer).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return customer, errors.New("customer not found")
