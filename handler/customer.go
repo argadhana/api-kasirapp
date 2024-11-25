@@ -7,6 +7,7 @@ import (
 	"api-kasirapp/service"
 	"math"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -162,3 +163,53 @@ func (h *customerHandler) DeleteCustomer(c *gin.Context) {
 	response := helper.APIResponse("Success delete customer", http.StatusOK, "success", formatter.FormatCustomer(deleteCustomer))
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *customerHandler) ExportCustomers(c *gin.Context) {
+	// Panggil fungsi service untuk mengekspor data pelanggan ke file Excel
+	file, err := h.customerService.ExportCustomersToXLS()
+	if err != nil {
+		// Jika terjadi error, kirimkan respons HTTP dengan status 500
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Set header untuk file download
+	c.Header("Content-Disposition", `attachment; filename="customers.xlsx"`)
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+	// Tulis file Excel langsung ke response writer
+	if err := file.Write(c.Writer); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write Excel file"})
+	}
+}
+
+func (h *customerHandler) ImportCustomers(c *gin.Context) {
+	// Get the uploaded file
+	file, err := c.FormFile("file")
+	if err != nil {
+		response := helper.APIResponse("Failed to process file", http.StatusBadRequest, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Save the file temporarily
+	tempFilePath := "./tmp/" + file.Filename
+	if err := c.SaveUploadedFile(file, tempFilePath); err != nil {
+		response := helper.APIResponse("Failed to save file", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+	defer os.Remove(tempFilePath) // Clean up the temporary file
+
+	// Import customers from the file
+	customers, err := h.customerService.ImportCustomersFromXLS(tempFilePath)
+	if err != nil {
+		response := helper.APIResponse("Failed to import customers", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := helper.APIResponse("Successfully imported customers", http.StatusOK, "success", customers)
+	c.JSON(http.StatusOK, response)
+}
+

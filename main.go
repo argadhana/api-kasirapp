@@ -119,6 +119,12 @@ func main() {
 	api.GET("/export/products", productHandler.ExportProducts)
 	api.POST("/import/products", productHandler.ImportProducts)
 
+	api.GET("/export/customers", customerHandler.ExportCustomers)
+	api.POST("/import/customers", customerHandler.ImportCustomers)
+
+	api.GET("/export/suppliers", supplierHandler.ExportSuppliers)
+	api.POST("/import/suppliers", supplierHandler.ImportSuppliers)
+
 	router.Run()
 }
 

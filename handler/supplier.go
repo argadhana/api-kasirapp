@@ -6,6 +6,7 @@ import (
 	"api-kasirapp/input"
 	"api-kasirapp/service"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -137,5 +138,49 @@ func (h *supplierHandler) DeleteSupplier(c *gin.Context) {
 	}
 
 	response := helper.APIResponse("Success delete supplier", http.StatusOK, "success", formatter.FormatSupplier(deleteSupplier))
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *supplierHandler) ExportSuppliers(c *gin.Context) {
+	file, err := h.supplierService.ExportSuppliersToXLS()
+	if err != nil {
+		response := helper.APIResponse("Export suppliers failed", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", `attachment; filename="suppliers.xlsx"`)
+	c.Header("File-Name", "suppliers.xlsx")
+	file.Write(c.Writer)
+}
+
+func (h *supplierHandler) ImportSuppliers(c *gin.Context) {
+	// Get the uploaded file
+	file, err := c.FormFile("file")
+	if err != nil {
+		response := helper.APIResponse("Failed to get file", http.StatusBadRequest, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Save the file to a temporary location
+	filePath := "./tmp/%s" + file.Filename
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		response := helper.APIResponse("Failed to save file", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+	defer os.Remove(filePath) // Cleanup temporary file
+
+	// Import suppliers from the file
+	importedSuppliers, err := h.supplierService.ImportSuppliersFromXLS(filePath)
+	if err != nil {
+		response := helper.APIResponse("Failed to import suppliers", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := helper.APIResponse("Successfully imported suppliers", http.StatusOK, "success", importedSuppliers)
 	c.JSON(http.StatusOK, response)
 }
