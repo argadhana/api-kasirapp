@@ -22,25 +22,6 @@ func NewDiscountRepository(db *gorm.DB) *discountRepository {
 }
 
 func (r *discountRepository) SaveDiscount(discount models.Discount) (models.Discount, error) {
-	var availableID *int
-
-	if err := r.db.Raw("SELECT MIN(id) FROM discounts WHERE id NOT IN (SELECT id FROM discounts)").Scan(&availableID).Error; err != nil {
-		return discount, err
-	}
-
-	if availableID != nil {
-		discount.ID = *availableID
-	} else {
-		var maxID *int
-		if err := r.db.Model(&models.Discount{}).Select("MAX(id)").Scan(&maxID).Error; err != nil {
-			return discount, err
-		}
-		if maxID != nil {
-			discount.ID = *maxID + 1
-		} else {
-			discount.ID = 1
-		}
-	}
 	err := r.db.Create(&discount).Error
 	if err != nil {
 		return discount, err

@@ -38,17 +38,19 @@ func NewProductRepository(db *gorm.DB) *productRepository {
 func (r *productRepository) Save(product models.Product) (models.Product, error) {
 	var existingProduct models.Product
 
+	// Check if the product code already exists
 	if err := r.db.Where("code_product = ?", product.CodeProduct).First(&existingProduct).Error; err == nil {
 		return product, errors.New("product code already exists") // Return error if product code exists
 	}
 
-	err := r.db.Create(&product).Error
-	if err != nil {
+	// Insert new product
+	if err := r.db.Create(&product).Error; err != nil {
 		return product, err
 	}
 
 	return product, nil
 }
+
 func (r *productRepository) FindByID(productID int) (models.Product, error) {
 	var product models.Product
 	if err := r.db.First(&product, productID).Error; err != nil {

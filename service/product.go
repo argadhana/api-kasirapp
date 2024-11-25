@@ -19,7 +19,7 @@ type ProductService interface {
 	UpdateProduct(ID int, input input.ProductInput) (models.Product, error)
 	DeleteProduct(ID int) (models.Product, error)
 	ExportProductsToXLS() (*excelize.File, error)
-	ImportProductsFromXLS(filePath string) error
+	ImportProductsFromXLS(filePath string) ([]models.Product, error)
 	SaveProductImage(ID int, fileLocation string) (models.Product, error)
 }
 
@@ -180,11 +180,11 @@ func (s *productService) ExportProductsToXLS() (*excelize.File, error) {
 	return f, nil
 }
 
-func (s *productService) ImportProductsFromXLS(filePath string) error {
+func (s *productService) ImportProductsFromXLS(filePath string) ([]models.Product, error) {
 	// Open the Excel file
 	f, err := excelize.OpenFile(filePath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer f.Close()
 
@@ -192,8 +192,10 @@ func (s *productService) ImportProductsFromXLS(filePath string) error {
 	sheet := "Products"
 	rows, err := f.GetRows(sheet)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	var importedProducts []models.Product
 
 	// Skip the header row
 	for i, row := range rows {
@@ -225,14 +227,17 @@ func (s *productService) ImportProductsFromXLS(filePath string) error {
 			Information:  row[12],
 		}
 
-		// Insert product into database
-		_, err := s.productRepository.Save(product)
+		// Insert product into the database
+		savedProduct, err := s.productRepository.Save(product)
 		if err != nil {
-			return err
+			return nil, err
 		}
+
+		// Add the saved product to the list
+		importedProducts = append(importedProducts, savedProduct)
 	}
 
-	return nil
+	return importedProducts, nil
 }
 
 func (s *productService) SaveProductImage(productID int, filePath string) (models.Product, error) {

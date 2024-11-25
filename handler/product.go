@@ -154,6 +154,7 @@ func (h *productHandler) ImportProducts(c *gin.Context) {
 	if err != nil {
 		response := helper.APIResponse("Import products failed", http.StatusBadRequest, "error", gin.H{"message": "file not found"})
 		c.JSON(http.StatusBadRequest, response)
+		return
 	}
 
 	// Save the file to a temporary location
@@ -166,13 +167,15 @@ func (h *productHandler) ImportProducts(c *gin.Context) {
 	defer os.Remove(filePath) // Remove the file after processing
 
 	// Call the import service
-	if err := h.productService.ImportProductsFromXLS(filePath); err != nil {
+	importedProducts, err := h.productService.ImportProductsFromXLS(filePath)
+	if err != nil {
 		response := helper.APIResponse("Import products failed", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	response := helper.APIResponse("Success import products", http.StatusOK, "success", nil)
+	// Respond with the list of imported products
+	response := helper.APIResponse("Success import products", http.StatusOK, "success", gin.H{"products": importedProducts})
 	c.JSON(http.StatusOK, response)
 }
 
@@ -193,12 +196,9 @@ func (h *productHandler) UploadProductImage(c *gin.Context) {
 		return
 	}
 
-	// Define the target directory
-	imageDir := "/var/www/images-product"
-
 	// Ensure the directory exists
-	if _, err := os.Stat(imageDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(imageDir, os.ModePerm); err != nil {
+	if _, err := os.Stat("./images-product"); os.IsNotExist(err) {
+		if err := os.Mkdir("./images-product", os.ModePerm); err != nil {
 			response := helper.APIResponse("Failed to create image directory", http.StatusInternalServerError, "error", gin.H{"message": err.Error()})
 			c.JSON(http.StatusInternalServerError, response)
 			return
@@ -206,7 +206,7 @@ func (h *productHandler) UploadProductImage(c *gin.Context) {
 	}
 
 	// Save the file to the directory
-	filePath := fmt.Sprintf("%s/%s", imageDir, file.Filename)
+	filePath := fmt.Sprintf("./images-product/%s", file.Filename)
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		response := helper.APIResponse("Upload image failed", http.StatusInternalServerError, "error", gin.H{"message": "failed to save file"})
 		c.JSON(http.StatusInternalServerError, response)

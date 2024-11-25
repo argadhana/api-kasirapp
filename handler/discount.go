@@ -34,7 +34,7 @@ func (h *discountHandler) CreateDiscount(c *gin.Context) {
 
 	newDiscount, err := h.discountService.Create(input)
 	if err != nil {
-		response := helper.APIResponse("Create discount failed", http.StatusBadRequest, "error", nil)
+		response := helper.APIResponse("Create discount failed", http.StatusBadRequest, "error", err.Error())
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
