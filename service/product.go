@@ -16,6 +16,7 @@ type ProductService interface {
 	FindProductByID(ID int) (models.Product, error)
 	FindByName(name string) (models.Product, error)
 	FindAll() ([]models.Product, error)
+	FindCategoryName(categoryName input.CategoryInput) (models.Category, error)
 	UpdateProduct(ID int, input input.ProductInput) (models.Product, error)
 	DeleteProduct(ID int) (models.Product, error)
 	ExportProductsToXLS() (*excelize.File, error)
@@ -25,10 +26,11 @@ type ProductService interface {
 
 type productService struct {
 	productRepository repository.ProductRepository
+	catgoryRepository repository.CategoryRepository
 }
 
-func NewProductService(productRepository repository.ProductRepository) *productService {
-	return &productService{productRepository}
+func NewProductService(productRepository repository.ProductRepository, categoryRepository repository.CategoryRepository) *productService {
+	return &productService{productRepository, categoryRepository}
 }
 
 func (s *productService) CreateProduct(input input.ProductInput) (models.Product, error) {
@@ -62,6 +64,15 @@ func (s *productService) FindProductByID(ID int) (models.Product, error) {
 	}
 
 	return product, nil
+}
+
+func (s *productService) FindCategoryName(categoryName input.CategoryInput) (models.Category, error) {
+	getCategory, err := s.productRepository.FindCategoryName(categoryName.Name)
+	if err != nil {
+		return getCategory, err
+	}
+
+	return getCategory, nil
 }
 
 func (s *productService) FindByName(name string) (models.Product, error) {

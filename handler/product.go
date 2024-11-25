@@ -62,6 +62,26 @@ func (h *productHandler) GetProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *productHandler) GetCategoryName(c *gin.Context) {
+	var input input.CategoryInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		response := helper.APIResponse("Invalid request body", http.StatusBadRequest, "error", err.Error())
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	category, err := h.productService.FindCategoryName(input)
+	if err != nil {
+		response := helper.APIResponse("Get category name failed", http.StatusBadRequest, "error", err.Error())
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := helper.APIResponse("Success get category name", http.StatusOK, "success", formatter.FormatCategory(category))
+	c.JSON(http.StatusOK, response)
+}
+
 func (h *productHandler) GetProductById(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)

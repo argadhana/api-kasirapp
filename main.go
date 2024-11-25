@@ -50,7 +50,7 @@ func main() {
 
 	userService := service.NewService(userRepository)
 	categoryService := service.NewCategoryService(categoryRepository)
-	productService := service.NewProductService(productRepository)
+	productService := service.NewProductService(productRepository, categoryRepository)
 	customersService := service.NewCustomerService(customerRepository)
 	supplierService := service.NewSupplierService(supplierRepository)
 	discountService := service.NewDiscountService(discountRepository)
@@ -98,6 +98,7 @@ func main() {
 	api.GET("/discounts", discountHandler.GetDiscounts)
 	api.GET("/discounts/:id", discountHandler.GetDiscountById)
 	api.GET("/category-products/:id", categoryHandler.GetCategoryProducts)
+	api.GET("/category-name", productHandler.GetCategoryName)
 
 	api.PUT("/categories/:id", categoryHandler.UpdateCategory)
 	api.PUT("/products/:id", productHandler.UpdateProduct)

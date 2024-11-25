@@ -12,6 +12,7 @@ type ProductRepository interface {
 	FindByID(ID int) (models.Product, error)
 	FindByName(name string) (models.Product, error)
 	FindAll() ([]models.Product, error)
+	FindCategoryName(categoryName string) (models.Category, error)
 	FindByCategoryID(categoryID int) ([]models.Product, error)
 	Update(product models.Product) (models.Product, error)
 	Delete(ID int) (models.Product, error)
@@ -99,4 +100,15 @@ func (r *productRepository) Delete(ID int) (models.Product, error) {
 	}
 
 	return product, nil
+}
+
+func (r *productRepository) FindCategoryName(categoryName string) (models.Category, error) {
+	var category models.Category
+	err := r.db.Where("name ILIKE ?", categoryName).Find(&category).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return category, errors.New("category not found")
+		}
+	}
+	return category, nil
 }
