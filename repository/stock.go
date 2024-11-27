@@ -3,6 +3,7 @@ package repository
 
 import (
 	"api-kasirapp/models"
+	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -13,6 +14,8 @@ type StockRepository interface {
 	FindStocks(limit int, offset int) ([]models.Stock, error)
 	GetByProductID(productID int) ([]models.Stock, error)
 	CountStocks() (int64, error)
+	DeleteByID(id int) error
+	GetByID(id int) (models.Stock, error)
 }
 
 type stockRepository struct {
@@ -62,4 +65,28 @@ func (r *stockRepository) CountStocks() (int64, error) {
 	var total int64
 	err := r.db.Model(&models.Stock{}).Count(&total).Error
 	return total, err
+}
+
+func (r *stockRepository) DeleteByID(id int) error {
+	err := r.db.Delete(&models.Stock{}, id).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *stockRepository) GetByID(id int) (models.Stock, error) {
+	var stock models.Stock
+
+	// Use GORM to find the stock by ID and preload the associated Product
+	err := r.db.Preload("Product").First(&stock, id).Error
+	if err != nil {
+		// Return an error if the stock is not found
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return stock, fmt.Errorf("stock not found")
+		}
+		return stock, err
+	}
+
+	return stock, nil
 }

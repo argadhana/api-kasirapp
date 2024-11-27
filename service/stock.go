@@ -14,6 +14,8 @@ type StockService interface {
 	GetStocks(limit int, offset int) ([]models.Stock, error)
 	GetStocksByProductID(productID int) ([]models.Stock, error)
 	CountStocks() (int64, error)
+	DeleteStock(id int) error
+	GetStockByID(id int) (models.Stock, error)
 }
 
 type stockService struct {
@@ -78,4 +80,28 @@ func (s *stockService) GetStocksByProductID(productID int) ([]models.Stock, erro
 
 func (s *stockService) CountStocks() (int64, error) {
 	return s.stockrepository.CountStocks()
+}
+
+func (s *stockService) DeleteStock(id int) error {
+	// Check if the stock exists
+	stock, err := s.stockrepository.GetByID(id) // Ensure a GetByID method exists
+	if err != nil {
+		return errors.New("stock not found")
+	}
+
+	// Perform the delete operation
+	err = s.stockrepository.DeleteByID(stock.ID)
+	if err != nil {
+		return errors.New("failed to delete stock")
+	}
+
+	return nil
+}
+
+func (s *stockService) GetStockByID(id int) (models.Stock, error) {
+	stock, err := s.stockrepository.GetByID(id)
+	if err != nil {
+		return models.Stock{}, err
+	}
+	return stock, nil
 }

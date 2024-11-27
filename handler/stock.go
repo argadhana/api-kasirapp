@@ -115,3 +115,50 @@ func (h *StockHandler) GetStocksByProductID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": stocks})
 }
+
+func (h *StockHandler) DeleteStock(c *gin.Context) {
+	// Get the ID from the URL parameter
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		response := helper.APIResponse("Invalid stock ID", http.StatusBadRequest, "error", gin.H{"errors": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Call the service to delete the stock
+	err = h.stockService.DeleteStock(id)
+	if err != nil {
+		response := helper.APIResponse("Failed to delete stock", http.StatusNotFound, "error", gin.H{"errors": err.Error()})
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	// Return a success response
+	response := helper.APIResponse("Stock successfully deleted", http.StatusOK, "success", nil)
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *StockHandler) GetStockByID(c *gin.Context) {
+	// Get the ID from the URL parameter
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		response := helper.APIResponse("Invalid stock ID", http.StatusBadRequest, "error", gin.H{"errors": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Call the service to get the stock
+	stock, err := h.stockService.GetStockByID(id)
+	if err != nil {
+		response := helper.APIResponse("Stock not found", http.StatusNotFound, "error", gin.H{"errors": err.Error()})
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	// Format the response
+	formattedStock := formatter.FormatStockResponse(stock)
+	response := helper.APIResponse("Stock retrieved successfully", http.StatusOK, "success", formattedStock)
+	c.JSON(http.StatusOK, response)
+}
