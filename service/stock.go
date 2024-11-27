@@ -10,8 +10,9 @@ import (
 
 type StockService interface {
 	AddStock(input input.CreateStockInput) (models.Stock, error)
-	GetStocks() ([]models.Stock, error)
+	GetStocks(limit int, offset int) ([]models.Stock, error)
 	GetStocksByProductID(productID int) ([]models.Stock, error)
+	CountStocks() (int64, error)
 }
 
 type stockService struct {
@@ -40,8 +41,8 @@ func (s *stockService) AddStock(input input.CreateStockInput) (models.Stock, err
 	return newStock, nil
 }
 
-func (s *stockService) GetStocks() ([]models.Stock, error) {
-	return s.repository.GetAll()
+func (s *stockService) GetStocks(limit int, offset int) ([]models.Stock, error) {
+	return s.repository.FindStocks(limit, offset)
 }
 
 func (s *stockService) GetStocksByProductID(productID int) ([]models.Stock, error) {
@@ -55,3 +56,6 @@ func (s *stockService) GetStocksByProductID(productID int) ([]models.Stock, erro
 	return stocks, nil
 }
 
+func (s *stockService) CountStocks() (int64, error) {
+	return s.repository.CountStocks()
+}

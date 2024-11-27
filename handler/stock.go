@@ -2,8 +2,10 @@
 package handler
 
 import (
+	"api-kasirapp/helper"
 	"api-kasirapp/input"
 	"api-kasirapp/service"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -35,19 +37,58 @@ func (h *StockHandler) AddStock(c *gin.Context) {
 }
 
 func (h *StockHandler) GetStocks(c *gin.Context) {
-	stocks, err := h.stockService.GetStocks()
+	limitStr := c.Query("limit")
+	offsetStr := c.Query("offset")
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		limit = 5
+	}
+
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil || offset < 0 {
+		offset = 0
+	}
+
+	stocks, err := h.stockService.GetStocks(limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response := helper.APIResponse("Get stocks failed", http.StatusBadRequest, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": stocks})
+	totalCount, err := h.stockService.CountStocks()
+	if err != nil {
+		response := helper.APIResponse("Get stocks failed", http.StatusBadRequest, "error", gin.H{"message": err.Error()})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	totalPages := int(math.Ceil(float64(totalCount) / float64(limit)))
+
+	paginationMeta := gin.H{
+		"total_data":   totalCount,
+		"total_pages":  totalPages,
+		"current_page": offset/limit + 1,
+		"per_page":     limit,
+	}
+
+	response := helper.APIResponse("Success get stocks", http.StatusOK, "success", gin.H{
+		"data":       stocks, // Format if needed using a formatter
+		"pagination": paginationMeta,
+	})
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *StockHandler) GetStocksByProductID(c *gin.Context) {
 	productID := c.Param("productID")
 
 	productIDInt, err := strconv.Atoi(productID)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	stocks, err := h.stockService.GetStocksByProductID(productIDInt)
 	if err != nil {
