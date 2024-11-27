@@ -6,6 +6,7 @@ import (
 	"api-kasirapp/models"
 	"api-kasirapp/repository"
 	"errors"
+	"fmt"
 )
 
 type StockService interface {
@@ -16,13 +17,16 @@ type StockService interface {
 }
 
 type stockService struct {
-	repository repository.StockRepository
+	stockrepository   repository.StockRepository
+	productRepository repository.ProductRepository
 }
 
-func NewStockService(repository repository.StockRepository) *stockService {
-	return &stockService{repository}
+func NewStockService(stockRepo repository.StockRepository, productRepo repository.ProductRepository) *stockService {
+	return &stockService{
+		stockrepository:   stockRepo,
+		productRepository: productRepo,
+	}
 }
-
 func (s *stockService) AddStock(input input.CreateStockInput) (models.Stock, error) {
 	stock := models.Stock{
 		ProductID:    input.ProductID,
@@ -33,20 +37,36 @@ func (s *stockService) AddStock(input input.CreateStockInput) (models.Stock, err
 		Description:  input.Description,
 	}
 
-	newStock, err := s.repository.Create(stock)
+	// Fetch the product
+	product, err := s.productRepository.FindByID(input.ProductID)
 	if err != nil {
-		return models.Stock{}, err
+		return models.Stock{}, fmt.Errorf("product not found: %w", err)
 	}
+
+	// Update product stock
+	product.Stock += input.Quantity
+	if _, err := s.productRepository.Update(product); err != nil {
+		return models.Stock{}, fmt.Errorf("failed to update product stock: %w", err)
+	}
+
+	// Create the stock record
+	newStock, err := s.stockrepository.Create(stock)
+	if err != nil {
+		return models.Stock{}, fmt.Errorf("failed to create stock record: %w", err)
+	}
+
+	// Ensure the Product is preloaded
+	newStock.Product = product
 
 	return newStock, nil
 }
 
 func (s *stockService) GetStocks(limit int, offset int) ([]models.Stock, error) {
-	return s.repository.FindStocks(limit, offset)
+	return s.stockrepository.FindStocks(limit, offset)
 }
 
 func (s *stockService) GetStocksByProductID(productID int) ([]models.Stock, error) {
-	stocks, err := s.repository.GetByProductID(productID)
+	stocks, err := s.stockrepository.GetByProductID(productID)
 	if err != nil {
 		return []models.Stock{}, err
 	}
@@ -57,5 +77,5 @@ func (s *stockService) GetStocksByProductID(productID int) ([]models.Stock, erro
 }
 
 func (s *stockService) CountStocks() (int64, error) {
-	return s.repository.CountStocks()
+	return s.stockrepository.CountStocks()
 }

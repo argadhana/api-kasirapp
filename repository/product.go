@@ -17,6 +17,14 @@ type ProductRepository interface {
 	Delete(ID int) (models.Product, error)
 }
 
+type productRepository struct {
+	db *gorm.DB
+}
+
+func NewProductRepository(db *gorm.DB) *productRepository {
+	return &productRepository{db}
+}
+
 func (r *productRepository) FindByCategoryID(categoryID int) ([]models.Product, error) {
 	var products []models.Product
 
@@ -25,14 +33,6 @@ func (r *productRepository) FindByCategoryID(categoryID int) ([]models.Product, 
 		return products, err
 	}
 	return products, nil
-}
-
-type productRepository struct {
-	db *gorm.DB
-}
-
-func NewProductRepository(db *gorm.DB) *productRepository {
-	return &productRepository{db}
 }
 
 func (r *productRepository) Save(product models.Product) (models.Product, error) {
@@ -53,7 +53,8 @@ func (r *productRepository) Save(product models.Product) (models.Product, error)
 
 func (r *productRepository) FindByID(productID int) (models.Product, error) {
 	var product models.Product
-	if err := r.db.First(&product, productID).Error; err != nil {
+	err := r.db.First(&product, "id = ?", productID).Error
+	if err != nil {
 		return product, err
 	}
 	return product, nil
@@ -100,4 +101,3 @@ func (r *productRepository) Delete(ID int) (models.Product, error) {
 
 	return product, nil
 }
-

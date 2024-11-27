@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"api-kasirapp/formatter"
 	"api-kasirapp/helper"
 	"api-kasirapp/input"
 	"api-kasirapp/service"
@@ -21,19 +22,35 @@ func NewStockHandler(stockService service.StockService) *StockHandler {
 }
 
 func (h *StockHandler) AddStock(c *gin.Context) {
+	// Bind the incoming JSON payload to the CreateStockInput struct
 	var input input.CreateStockInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		// Format validation errors
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		// Respond with a formatted API response for validation errors
+		response := helper.APIResponse("Add stock failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
 
+	// Call the AddStock service
 	newStock, err := h.stockService.AddStock(input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Respond with a formatted API response for service errors
+		errorMessage := gin.H{"errors": err.Error()}
+		response := helper.APIResponse("Add stock failed", http.StatusBadRequest, "error", errorMessage)
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": newStock})
+	// Format the response for a successful stock creation
+	formattedStock := formatter.FormatStockResponse(newStock)
+	response := helper.APIResponse("Stock successfully added", http.StatusCreated, "success", formattedStock)
+	c.JSON(http.StatusCreated, response)
 }
 
 func (h *StockHandler) GetStocks(c *gin.Context) {

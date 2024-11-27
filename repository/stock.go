@@ -3,6 +3,7 @@ package repository
 
 import (
 	"api-kasirapp/models"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -23,20 +24,38 @@ func NewStockRepository(db *gorm.DB) *stockRepository {
 }
 
 func (r *stockRepository) Create(stock models.Stock) (models.Stock, error) {
+	// Create the stock record
 	err := r.db.Create(&stock).Error
-	return stock, err
+	if err != nil {
+		return stock, err
+	}
+
+	// Preload and debug
+	err = r.db.Preload("Product").First(&stock, stock.ID).Error
+	if err != nil {
+		return stock, err
+	}
+
+	fmt.Printf("Debug: Stock with Product: %+v\n", stock)
+	return stock, nil
 }
 
 func (r *stockRepository) FindStocks(limit int, offset int) ([]models.Stock, error) {
 	var stocks []models.Stock
 	err := r.db.Preload("Product").Limit(limit).Offset(offset).Find(&stocks).Error
-	return stocks, err
+	if err != nil {
+		return nil, err
+	}
+	return stocks, nil
 }
 
 func (r *stockRepository) GetByProductID(productID int) ([]models.Stock, error) {
 	var stocks []models.Stock
 	err := r.db.Where("product_id = ?", productID).Preload("Product").Find(&stocks).Error
-	return stocks, err
+	if err != nil {
+		return nil, err
+	}
+	return stocks, nil
 }
 
 func (r *stockRepository) CountStocks() (int64, error) {

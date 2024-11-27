@@ -54,7 +54,7 @@ func main() {
 	customersService := service.NewCustomerService(customerRepository)
 	supplierService := service.NewSupplierService(supplierRepository)
 	discountService := service.NewDiscountService(discountRepository)
-	stockService := service.NewStockService(stockRepository)
+	stockService := service.NewStockService(stockRepository, productRepository)
 	transactionService := service.NewOrderService(transactionRepository, productRepository)
 
 	userHandler := handler.NewUserHandler(userService, authService)
