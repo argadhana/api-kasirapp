@@ -41,7 +41,7 @@ func (h *productHandler) CreateProduct(c *gin.Context) {
 			c.JSON(http.StatusConflict, response)
 			return
 		}
-		response := helper.APIResponse("Create product failed", http.StatusBadRequest, "error", nil)
+		response := helper.APIResponse("Create product failed", http.StatusBadRequest, "error", err.Error())
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
