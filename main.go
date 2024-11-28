@@ -116,6 +116,7 @@ func main() {
 
 	api.POST("/stocks", stockHandler.AddStock)
 	api.GET("/stocks/:id", stockHandler.GetStocks)
+	api.GET("/stocks", stockHandler.GetStocks)
 	api.GET("/stock-product/:productID", stockHandler.GetStocksByProductID)
 
 	api.GET("/export/products", productHandler.ExportProducts)
