@@ -105,6 +105,7 @@ func main() {
 	api.PUT("/customers/:id", customerHandler.UpdateCustomer)
 	api.PUT("/suppliers/:id", supplierHandler.UpdateSupplier)
 	api.PUT("/discounts/:id", discountHandler.UpdateDiscount)
+	api.PUT("/stocks/:id", stockHandler.UpdateStock)
 
 	api.DELETE("/categories/:id", categoryHandler.DeleteCategory)
 	api.DELETE("/products/:id", productHandler.DeleteProduct)

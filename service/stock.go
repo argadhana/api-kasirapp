@@ -16,6 +16,7 @@ type StockService interface {
 	CountStocks() (int64, error)
 	DeleteStock(id int) error
 	GetStockByID(id int) (models.Stock, error)
+	UpdateStockByID(id int, input input.CreateStockInput) (models.Stock, error)
 }
 
 type stockService struct {
@@ -104,4 +105,36 @@ func (s *stockService) GetStockByID(id int) (models.Stock, error) {
 		return models.Stock{}, err
 	}
 	return stock, nil
+}
+
+func (s *stockService) UpdateStockByID(id int, input input.CreateStockInput) (models.Stock, error) {
+	// Validate the stock existence
+	_, err := s.stockrepository.GetByID(id)
+	if err != nil {
+		return models.Stock{}, fmt.Errorf("stock not found")
+	}
+
+	// Validate product existence (optional, based on business rules)
+	_, err = s.productRepository.FindByID(input.ProductID)
+	if err != nil {
+		return models.Stock{}, fmt.Errorf("product not found")
+	}
+
+	// Prepare updated stock data
+	updatedStock := models.Stock{
+		ProductID:    input.ProductID,
+		Quantity:     input.Quantity,
+		BasePrice:    input.BasePrice,
+		SellingPrice: input.SellingPrice,
+		Date:         input.Date,
+		Description:  input.Description,
+	}
+
+	// Call repository to update the stock
+	newStock, err := s.stockrepository.UpdateByID(id, updatedStock)
+	if err != nil {
+		return models.Stock{}, fmt.Errorf("failed to update stock: %w", err)
+	}
+
+	return newStock, nil
 }

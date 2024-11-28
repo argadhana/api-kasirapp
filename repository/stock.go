@@ -16,6 +16,7 @@ type StockRepository interface {
 	CountStocks() (int64, error)
 	DeleteByID(id int) error
 	GetByID(id int) (models.Stock, error)
+	UpdateByID(id int, stock models.Stock) (models.Stock, error)
 }
 
 type stockRepository struct {
@@ -89,4 +90,30 @@ func (r *stockRepository) GetByID(id int) (models.Stock, error) {
 	}
 
 	return stock, nil
+}
+
+func (r *stockRepository) UpdateByID(id int, stock models.Stock) (models.Stock, error) {
+	// Find the existing stock
+	var existingStock models.Stock
+	err := r.db.First(&existingStock, id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return existingStock, fmt.Errorf("stock not found")
+		}
+		return existingStock, err
+	}
+
+	// Update the stock
+	err = r.db.Model(&existingStock).Updates(stock).Error
+	if err != nil {
+		return existingStock, err
+	}
+
+	// Preload the associated product
+	err = r.db.Preload("Product").First(&existingStock, id).Error
+	if err != nil {
+		return existingStock, err
+	}
+
+	return existingStock, nil
 }

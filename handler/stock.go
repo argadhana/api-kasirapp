@@ -162,3 +162,37 @@ func (h *StockHandler) GetStockByID(c *gin.Context) {
 	response := helper.APIResponse("Stock retrieved successfully", http.StatusOK, "success", formattedStock)
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *StockHandler) UpdateStock(c *gin.Context) {
+	// Parse the stock ID from URL parameters
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		response := helper.APIResponse("Invalid stock ID", http.StatusBadRequest, "error", gin.H{"errors": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Bind the JSON payload to the UpdateStockInput struct
+	var input input.CreateStockInput
+	err = c.ShouldBindJSON(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		response := helper.APIResponse("Failed to update stock", http.StatusUnprocessableEntity, "error", gin.H{"errors": errors})
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	// Call the service to update the stock
+	updatedStock, err := h.stockService.UpdateStockByID(id, input)
+	if err != nil {
+		response := helper.APIResponse("Failed to update stock", http.StatusBadRequest, "error", gin.H{"errors": err.Error()})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Format and send the success response
+	formattedStock := formatter.FormatStockResponse(updatedStock)
+	response := helper.APIResponse("Stock successfully updated", http.StatusOK, "success", formattedStock)
+	c.JSON(http.StatusOK, response)
+}
