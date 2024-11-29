@@ -36,6 +36,7 @@ func (s *stockService) AddStock(input input.CreateStockInput) (models.Stock, err
 		Quantity:     input.Quantity,
 		BasePrice:    input.BasePrice,
 		SellingPrice: input.SellingPrice,
+		PurchasePrice: input.PurchasePrice,
 		Date:         input.Date,
 		Description:  input.Description,
 	}
@@ -126,6 +127,7 @@ func (s *stockService) UpdateStockByID(id int, input input.CreateStockInput) (mo
 		Quantity:     input.Quantity,
 		BasePrice:    input.BasePrice,
 		SellingPrice: input.SellingPrice,
+		PurchasePrice: input.PurchasePrice,
 		Date:         input.Date,
 		Description:  input.Description,
 	}

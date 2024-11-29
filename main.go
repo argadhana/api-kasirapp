@@ -78,7 +78,7 @@ func main() {
 	api := router.Group("/api/v1")
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
-	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
+	api.POST("/email-checkers", userHandler.CheckEmailAvailability)
 	api.POST("/categories", categoryHandler.CreateCategory)
 	api.POST("/products", productHandler.CreateProduct)
 	api.POST("/customers", customerHandler.CreateCustomer)
@@ -98,7 +98,7 @@ func main() {
 	api.GET("/discounts", discountHandler.GetDiscounts)
 	api.GET("/discounts/:id", discountHandler.GetDiscountById)
 	api.GET("/category-products/:id", categoryHandler.GetCategoryProducts)
-	api.GET("/category-name/:category_name", categoryHandler.GetProductsByCategoryName)
+	api.GET("/category-name/:category-name", categoryHandler.GetProductsByCategoryName)
 
 	api.PUT("/categories/:id", categoryHandler.UpdateCategory)
 	api.PUT("/products/:id", productHandler.UpdateProduct)
@@ -115,7 +115,7 @@ func main() {
 	api.DELETE("/stocks/:id", stockHandler.DeleteStock)
 
 	api.POST("/stocks", stockHandler.AddStock)
-	api.GET("/stocks/:id", stockHandler.GetStocks)
+	api.GET("/stocks/:id", stockHandler.GetStocksByStockID)
 	api.GET("/stocks", stockHandler.GetStocks)
 	api.GET("/stock-product/:productID", stockHandler.GetStocksByProductID)
 
@@ -128,7 +128,10 @@ func main() {
 	api.GET("/export/suppliers", supplierHandler.ExportSuppliers)
 	api.POST("/import/suppliers", supplierHandler.ImportSuppliers)
 
-	router.Run()
+	err = router.Run()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 func loadEnv() {

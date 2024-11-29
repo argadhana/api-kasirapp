@@ -196,3 +196,25 @@ func (h *StockHandler) UpdateStock(c *gin.Context) {
 	response := helper.APIResponse("Stock successfully updated", http.StatusOK, "success", formattedStock)
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *StockHandler) GetStocksByStockID(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		response := helper.APIResponse("Invalid stock ID", http.StatusBadRequest, "error", gin.H{"errors": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	stock, err := h.stockService.GetStockByID(id)
+	if err != nil {
+		response := helper.APIResponse("Stock not found", http.StatusNotFound, "error", gin.H{"errors": err.Error()})
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	formattedStock := formatter.FormatStockResponse(stock)
+	response := helper.APIResponse("Stock retrieved successfully", http.StatusOK, "success", formattedStock)
+	c.JSON(http.StatusOK, response)
+
+}
