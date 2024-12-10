@@ -8,13 +8,13 @@ import (
 	"api-kasirapp/service"
 	"fmt"
 	"github.com/gin-contrib/cors"
+	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -79,54 +79,54 @@ func main() {
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email-checkers", userHandler.CheckEmailAvailability)
-	api.POST("/categories", categoryHandler.CreateCategory)
-	api.POST("/products", productHandler.CreateProduct)
-	api.POST("/customers", customerHandler.CreateCustomer)
-	api.POST("/suppliers", supplierHandler.CreateSupplier)
-	api.POST("/discounts", discountHandler.CreateDiscount)
-	api.POST("/transactions", transactionHandler.CreateTransaction)
-	api.POST("/product-image/:id", productHandler.UploadProductImage)
+	api.POST("/categories", authMiddleware(authService, userService), categoryHandler.CreateCategory)
+	api.POST("/products", authMiddleware(authService, userService), productHandler.CreateProduct)
+	api.POST("/customers", authMiddleware(authService, userService), customerHandler.CreateCustomer)
+	api.POST("/suppliers", authMiddleware(authService, userService), supplierHandler.CreateSupplier)
+	api.POST("/discounts", authMiddleware(authService, userService), discountHandler.CreateDiscount)
+	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransaction)
+	api.POST("/product-image/:id", authMiddleware(authService, userService), productHandler.UploadProductImage)
 
-	api.GET("/categories", categoryHandler.GetCategories)
-	api.GET("/categories/:id", categoryHandler.GetCategoryById)
-	api.GET("/products", productHandler.GetProducts)
-	api.GET("/products/:id", productHandler.GetProductById)
-	api.GET("/customers", customerHandler.GetCustomers)
-	api.GET("/customers/:id", customerHandler.GetCustomerById)
-	api.GET("/suppliers", supplierHandler.GetSuppliers)
-	api.GET("/suppliers/:id", supplierHandler.GetSupplierById)
-	api.GET("/discounts", discountHandler.GetDiscounts)
-	api.GET("/discounts/:id", discountHandler.GetDiscountById)
-	api.GET("/category-products/:id", categoryHandler.GetCategoryProducts)
-	api.GET("/category-name/:category-name", categoryHandler.GetProductsByCategoryName)
+	api.GET("/categories", authMiddleware(authService, userService), categoryHandler.GetCategories)
+	api.GET("/categories/:id", authMiddleware(authService, userService), categoryHandler.GetCategoryById)
+	api.GET("/products", authMiddleware(authService, userService), productHandler.GetProducts)
+	api.GET("/products/:id", authMiddleware(authService, userService), productHandler.GetProductById)
+	api.GET("/customers", authMiddleware(authService, userService), customerHandler.GetCustomers)
+	api.GET("/customers/:id", authMiddleware(authService, userService), customerHandler.GetCustomerById)
+	api.GET("/suppliers", authMiddleware(authService, userService), supplierHandler.GetSuppliers)
+	api.GET("/suppliers/:id", authMiddleware(authService, userService), supplierHandler.GetSupplierById)
+	api.GET("/discounts", authMiddleware(authService, userService), discountHandler.GetDiscounts)
+	api.GET("/discounts/:id", authMiddleware(authService, userService), discountHandler.GetDiscountById)
+	api.GET("/category-products/:id", authMiddleware(authService, userService), categoryHandler.GetCategoryProducts)
+	api.GET("/category-name/:category-name", authMiddleware(authService, userService), categoryHandler.GetProductsByCategoryName)
 
-	api.PUT("/categories/:id", categoryHandler.UpdateCategory)
-	api.PUT("/products/:id", productHandler.UpdateProduct)
-	api.PUT("/customers/:id", customerHandler.UpdateCustomer)
-	api.PUT("/suppliers/:id", supplierHandler.UpdateSupplier)
-	api.PUT("/discounts/:id", discountHandler.UpdateDiscount)
-	api.PUT("/stocks/:id", stockHandler.UpdateStock)
+	api.PUT("/categories/:id", authMiddleware(authService, userService), categoryHandler.UpdateCategory)
+	api.PUT("/products/:id", authMiddleware(authService, userService), productHandler.UpdateProduct)
+	api.PUT("/customers/:id", authMiddleware(authService, userService), customerHandler.UpdateCustomer)
+	api.PUT("/suppliers/:id", authMiddleware(authService, userService), supplierHandler.UpdateSupplier)
+	api.PUT("/discounts/:id", authMiddleware(authService, userService), discountHandler.UpdateDiscount)
+	api.PUT("/stocks/:id", authMiddleware(authService, userService), stockHandler.UpdateStock)
 
-	api.DELETE("/categories/:id", categoryHandler.DeleteCategory)
-	api.DELETE("/products/:id", productHandler.DeleteProduct)
-	api.DELETE("/customers/:id", customerHandler.DeleteCustomer)
-	api.DELETE("/suppliers/:id", supplierHandler.DeleteSupplier)
-	api.DELETE("/discounts/:id", discountHandler.DeleteDiscount)
-	api.DELETE("/stocks/:id", stockHandler.DeleteStock)
+	api.DELETE("/categories/:id", authMiddleware(authService, userService), categoryHandler.DeleteCategory)
+	api.DELETE("/products/:id", authMiddleware(authService, userService), productHandler.DeleteProduct)
+	api.DELETE("/customers/:id", authMiddleware(authService, userService), customerHandler.DeleteCustomer)
+	api.DELETE("/suppliers/:id", authMiddleware(authService, userService), supplierHandler.DeleteSupplier)
+	api.DELETE("/discounts/:id", authMiddleware(authService, userService), discountHandler.DeleteDiscount)
+	api.DELETE("/stocks/:id", authMiddleware(authService, userService), stockHandler.DeleteStock)
 
-	api.POST("/stocks", stockHandler.AddStock)
-	api.GET("/stocks/:id", stockHandler.GetStocksByStockID)
-	api.GET("/stocks", stockHandler.GetStocks)
-	api.GET("/stock-product/:productID", stockHandler.GetStocksByProductID)
+	api.POST("/stocks", authMiddleware(authService, userService), stockHandler.AddStock)
+	api.GET("/stocks/:id", authMiddleware(authService, userService), stockHandler.GetStocksByStockID)
+	api.GET("/stocks", authMiddleware(authService, userService), stockHandler.GetStocks)
+	api.GET("/stock-product/:productID", authMiddleware(authService, userService), stockHandler.GetStocksByProductID)
 
-	api.GET("/export/products", productHandler.ExportProducts)
-	api.POST("/import/products", productHandler.ImportProducts)
+	api.GET("/export/products", authMiddleware(authService, userService), productHandler.ExportProducts)
+	api.POST("/import/products", authMiddleware(authService, userService), productHandler.ImportProducts)
 
-	api.GET("/export/customers", customerHandler.ExportCustomers)
-	api.POST("/import/customers", customerHandler.ImportCustomers)
+	api.GET("/export/customers", authMiddleware(authService, userService), customerHandler.ExportCustomers)
+	api.POST("/import/customers", authMiddleware(authService, userService), customerHandler.ImportCustomers)
 
-	api.GET("/export/suppliers", supplierHandler.ExportSuppliers)
-	api.POST("/import/suppliers", supplierHandler.ImportSuppliers)
+	api.GET("/export/suppliers", authMiddleware(authService, userService), supplierHandler.ExportSuppliers)
+	api.POST("/import/suppliers", authMiddleware(authService, userService), supplierHandler.ImportSuppliers)
 
 	err = router.Run()
 	if err != nil {

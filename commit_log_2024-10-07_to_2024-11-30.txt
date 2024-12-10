@@ -1,0 +1,24 @@
+098a635 - argadhana, 2024-11-29 : add purchasePrice in stock entity
+7f323b1 - argadhana, 2024-11-28 : get all stock with pagination
+f1bf58f - argadhana, 2024-11-28 : add update stock
+6f60487 - argadhana, 2024-11-28 : get stock by stock id + delete stock
+37c6eed - argadhana, 2024-11-28 : preload product when add stock
+39110a0 - unknown, 2024-11-27 : error handling
+231b4e3 - unknown, 2024-11-27 : add pagination in stocks
+73ee031 - argadhana, 2024-11-26 : export import
+01c5d77 - argadhana, 2024-11-25 : modified pagination
+3e27b84 - argadhana, 2024-11-25 : modified get category name
+47414d8 - argadhana, 2024-11-25 : modifie delete at repository
+04dc2bf - argadhana, 2024-11-25 : minor update
+8ece371 - argadhana, 2024-11-21 : image for development /var/www
+0b935c0 - argadhana, 2024-11-21 : user formatter input
+e0114d5 - argadhana, 2024-11-21 : Cors
+57c683b - argadhana, 2024-11-20 : Service AUth
+395e79c - argadhana, 2024-11-20 : transaction & image url product
+669dff5 - unknown, 2024-11-19 : constraint between transaction and shift
+9a452f5 - unknown, 2024-11-19 : modified transaction
+9c51cb1 - unknown, 2024-11-19 : add: management shift
+1eec6a4 - argadhana, 2024-11-04 : API Transaction tapi belom fix
+bdf1faf - argadhana, 2024-11-03 : change env secret key
+141728e - argadhana, 2024-11-03 : api stock, import export product
+56da62e - argadhana, 2024-11-03 : Api Setup
